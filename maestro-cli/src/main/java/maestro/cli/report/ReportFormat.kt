@@ -8,6 +8,7 @@ enum class ReportFormat(
 ) {
 
     JUNIT(".xml"),
+    JUNIT_DETAILED(".xml", "JUNIT-DETAILED"),
     HTML(".html"),
     HTML_DETAILED(".html", "HTML-DETAILED"),
     NOOP(null);

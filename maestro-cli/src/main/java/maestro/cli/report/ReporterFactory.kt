@@ -7,7 +7,8 @@ object ReporterFactory {
 
     fun buildReporter(format: ReportFormat, testSuiteName: String?): TestSuiteReporter {
         return when (format) {
-            ReportFormat.JUNIT -> JUnitTestSuiteReporter.xml(testSuiteName)
+            ReportFormat.JUNIT -> JUnitTestSuiteReporter.xml(testSuiteName, detailed = false)
+            ReportFormat.JUNIT_DETAILED -> JUnitTestSuiteReporter.xml(testSuiteName, detailed = true)
             ReportFormat.NOOP -> TestSuiteReporter.NOOP
             ReportFormat.HTML -> HtmlTestSuiteReporter(detailed = false)
             ReportFormat.HTML_DETAILED -> HtmlTestSuiteReporter(detailed = true)

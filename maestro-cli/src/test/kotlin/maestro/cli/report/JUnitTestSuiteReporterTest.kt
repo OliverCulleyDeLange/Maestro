@@ -188,4 +188,65 @@ class JUnitTestSuiteReporterTest : TestSuiteReporterTest() {
         )
     }
 
+    @Test
+    fun `XML detailed - flow becomes a testsuite and each step a testcase`() {
+        // Given
+        val testee = JUnitTestSuiteReporter.xml(detailed = true)
+        val sink = Buffer()
+
+        // When
+        testee.report(
+            summary = testSuccessWithSteps,
+            out = sink
+        )
+        val resultStr = sink.readUtf8()
+
+        // Then
+        assertThat(resultStr).isEqualTo(
+            """
+                <?xml version='1.0' encoding='UTF-8'?>
+                <testsuites>
+                  <testsuite name="Flow A" tests="3" failures="0" time="5.0" timestamp="$nowPlus1AsIso">
+                    <testcase id="1. Launch app" name="1. Launch app" classname="Flow A" time="1.2" status="COMPLETED"/>
+                    <testcase id="2. Tap on button" name="2. Tap on button" classname="Flow A" time="0.5" status="COMPLETED"/>
+                    <testcase id="3. Assert visible" name="3. Assert visible" classname="Flow A" time="0.1" status="COMPLETED"/>
+                  </testsuite>
+                </testsuites>
+
+            """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `XML detailed - failing step carries the failure`() {
+        // Given
+        val testee = JUnitTestSuiteReporter.xml(detailed = true)
+        val sink = Buffer()
+
+        // When
+        testee.report(
+            summary = testErrorWithSteps,
+            out = sink
+        )
+        val resultStr = sink.readUtf8()
+
+        // Then
+        assertThat(resultStr).isEqualTo(
+            """
+                <?xml version='1.0' encoding='UTF-8'?>
+                <testsuites>
+                  <testsuite name="Flow B" tests="4" failures="1" time="3.0" timestamp="$nowPlus1AsIso">
+                    <testcase id="1. Launch app" name="1. Launch app" classname="Flow B" time="1.5" status="COMPLETED"/>
+                    <testcase id="2. Tap on optional element" name="2. Tap on optional element" classname="Flow B" status="WARNED"/>
+                    <testcase id="3. Tap on button" name="3. Tap on button" classname="Flow B" time="2.0" status="FAILED">
+                      <failure>Element not found</failure>
+                    </testcase>
+                    <testcase id="4. Assert visible" name="4. Assert visible" classname="Flow B" time="0.0" status="SKIPPED"/>
+                  </testsuite>
+                </testsuites>
+
+            """.trimIndent()
+        )
+    }
+
 }
