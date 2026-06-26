@@ -161,6 +161,140 @@ class JUnitTestSuiteReporterTest : TestSuiteReporterTest() {
     }
 
     @Test
+    fun `XML detailed - flat steps become testcases under a flow testsuite`() {
+        // Given
+        val testee = JUnitTestSuiteReporter.xml(detailed = true)
+        val sink = Buffer()
+
+        // When
+        testee.report(
+            summary = testSuccessWithSteps,
+            out = sink
+        )
+        val resultStr = sink.readUtf8()
+
+        // Then
+        assertThat(resultStr).isEqualTo(
+            """
+                <?xml version='1.0' encoding='UTF-8'?>
+                <testsuites>
+                  <testsuite name="Test Suite" tests="3" failures="0" time="5.0" timestamp="$nowAsIso">
+                    <testsuite name="Flow A" tests="3" failures="0" time="5.0" timestamp="$nowPlus1AsIso">
+                      <testcase name="1. Launch app" classname="Flow A" time="1.2" status="COMPLETED"/>
+                      <testcase name="2. Tap on button" classname="Flow A" time="0.5" status="COMPLETED"/>
+                      <testcase name="3. Assert visible" classname="Flow A" time="0.1" status="COMPLETED"/>
+                    </testsuite>
+                  </testsuite>
+                </testsuites>
+
+            """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `XML detailed - failed flat step carries the failure message`() {
+        // Given
+        val testee = JUnitTestSuiteReporter.xml(detailed = true)
+        val sink = Buffer()
+
+        // When
+        testee.report(
+            summary = testErrorWithSteps,
+            out = sink
+        )
+        val resultStr = sink.readUtf8()
+
+        // Then
+        assertThat(resultStr).isEqualTo(
+            """
+                <?xml version='1.0' encoding='UTF-8'?>
+                <testsuites>
+                  <testsuite name="Test Suite" tests="4" failures="1" time="3.0" timestamp="$nowAsIso">
+                    <testsuite name="Flow B" tests="4" failures="1" time="3.0" timestamp="$nowPlus1AsIso">
+                      <testcase name="1. Launch app" classname="Flow B" time="1.5" status="COMPLETED"/>
+                      <testcase name="2. Tap on optional element" classname="Flow B" status="WARNED"/>
+                      <testcase name="3. Tap on button" classname="Flow B" time="2.0" status="FAILED">
+                        <failure>Element not found</failure>
+                      </testcase>
+                      <testcase name="4. Assert visible" classname="Flow B" time="0.0" status="SKIPPED"/>
+                    </testsuite>
+                  </testsuite>
+                </testsuites>
+
+            """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `XML detailed - sub-flow steps are nested testsuites`() {
+        // Given
+        val testee = JUnitTestSuiteReporter.xml(detailed = true)
+        val sink = Buffer()
+
+        // When
+        testee.report(
+            summary = testSuccessWithNestedSteps,
+            out = sink
+        )
+        val resultStr = sink.readUtf8()
+
+        // Then
+        assertThat(resultStr).isEqualTo(
+            """
+                <?xml version='1.0' encoding='UTF-8'?>
+                <testsuites>
+                  <testsuite name="Test Suite" device="iPhone 15" tests="4" failures="0" time="5.0" timestamp="$nowAsIso">
+                    <testsuite name="Flow A" file=".maestro/flow_a.yaml" tests="4" failures="0" time="5.0" timestamp="$nowPlus1AsIso">
+                      <testcase name="1. Launch app" classname="Flow A" time="1.2" status="COMPLETED"/>
+                      <testsuite name="2. Run sub-flow" tests="2" failures="0" time="2.0">
+                        <testcase name="3. Tap on A" classname="Flow A" time="0.3" status="COMPLETED"/>
+                        <testcase name="4. Tap on B" classname="Flow A" time="0.2" status="COMPLETED"/>
+                      </testsuite>
+                      <testcase name="5. Assert visible" classname="Flow A" time="0.1" status="COMPLETED"/>
+                    </testsuite>
+                  </testsuite>
+                </testsuites>
+
+            """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `XML detailed - failure lands on the failing leaf inside a nested sub-flow`() {
+        // Given
+        val testee = JUnitTestSuiteReporter.xml(detailed = true)
+        val sink = Buffer()
+
+        // When
+        testee.report(
+            summary = testErrorWithNestedSteps,
+            out = sink
+        )
+        val resultStr = sink.readUtf8()
+
+        // Then
+        assertThat(resultStr).isEqualTo(
+            """
+                <?xml version='1.0' encoding='UTF-8'?>
+                <testsuites>
+                  <testsuite name="Test Suite" tests="3" failures="1" time="3.0" timestamp="$nowAsIso">
+                    <testsuite name="Flow B" file=".maestro/flow_b.yaml" tests="3" failures="1" time="3.0" timestamp="$nowPlus1AsIso">
+                      <testcase name="1. Launch app" classname="Flow B" time="1.0" status="COMPLETED"/>
+                      <testsuite name="2. Run sub-flow" tests="2" failures="1" time="2.0">
+                        <testcase name="3. Tap on A" classname="Flow B" time="0.3" status="COMPLETED"/>
+                        <testcase name="4. Tap on missing" classname="Flow B" time="1.0" status="FAILED">
+                          <failure>Element not found</failure>
+                        </testcase>
+                      </testsuite>
+                    </testsuite>
+                  </testsuite>
+                </testsuites>
+
+            """.trimIndent()
+        )
+    }
+
+    @Test
     fun `XML - Custom id and classname are used when present`() {
         // Given
         val testee = JUnitTestSuiteReporter.xml()

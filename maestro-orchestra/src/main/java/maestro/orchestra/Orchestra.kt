@@ -129,6 +129,7 @@ class Orchestra(
     private val insights: Insights = NoopInsights,
     private val onFlowStart: (List<MaestroCommand>) -> Unit = {},
     private val onCommandStart: (Int, MaestroCommand) -> Unit = { _, _ -> },
+    private val onCommandDepth: (MaestroCommand, Int) -> Unit = { _, _ -> },
     private val onCommandComplete: (Int, MaestroCommand) -> Unit = { _, _ -> },
     private val onCommandFailed: (Int, MaestroCommand, Throwable) -> ErrorResolution = { _, _, e -> throw e },
     private val onCommandWarned: (Int, MaestroCommand) -> Unit = { _, _ -> },
@@ -221,6 +222,8 @@ class Orchestra(
         }
     }
 
+    private var subflowDepth: Int = 0
+
     private suspend fun executeCommands(
         commands: List<MaestroCommand>,
         config: MaestroConfig? = null,
@@ -241,6 +244,7 @@ class Orchestra(
                 flowController.waitIfPaused()
 
                 onCommandStart(index, command)
+                onCommandDepth(command, subflowDepth)
 
                 jsEngine.onLogMessage { msg ->
                     val metadata = getMetadata(command)
@@ -969,6 +973,7 @@ class Orchestra(
                 .mapIndexed { index, command ->
                     yield()
                     onCommandStart(index, command)
+                    onCommandDepth(command, subflowDepth)
 
                     val evaluatedCommand = command.evaluateScripts(jsEngine)
                     val metadata = getMetadata(command)
@@ -1025,6 +1030,7 @@ class Orchestra(
     ): Boolean {
         // Enter environment scope to isolate environment variables for this subflow
         jsEngine.enterEnvScope()
+        subflowDepth++
         return try {
             executeDefineVariablesCommands(commands, config)
             // filter out DefineVariablesCommand to not execute it twice
@@ -1055,6 +1061,7 @@ class Orchestra(
             }
             onCompleteSuccess && flowSuccess
         } finally {
+            subflowDepth--
             jsEngine.leaveEnvScope()
         }
     }

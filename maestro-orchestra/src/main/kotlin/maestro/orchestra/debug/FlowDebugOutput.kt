@@ -14,6 +14,7 @@ data class CommandDebugMetadata(
     var hierarchy: TreeNode? = null,
     var sequenceNumber: Int = 0,
     var evaluatedCommand: MaestroCommand? = null,
+    var depth: Int = 0,
 ) {
     fun calculateDuration() {
         if (timestamp != null) {

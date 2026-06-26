@@ -42,6 +42,7 @@ data class TestExecutionSummary(
         val description: String,
         val status: String,
         val duration: String,
+        val depth: Int = 0,
     )
 
     data class Failure(

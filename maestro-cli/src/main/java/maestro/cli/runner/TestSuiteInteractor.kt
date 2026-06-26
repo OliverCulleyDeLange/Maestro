@@ -195,6 +195,9 @@ class TestSuiteInteractor(
                             sequenceNumber = commandSequenceNumber++
                         )
                     },
+                    onCommandDepth = { command, depth ->
+                        debugOutput.commands[command]?.depth = depth
+                    },
                     onCommandComplete = { _, command ->
                         logger.info("${shardPrefix}${command.description()} COMPLETED")
                         debugOutput.commands[command]?.let {
@@ -292,6 +295,7 @@ class TestSuiteInteractor(
                         description = "${index + 1}. ${displayCommand.description()}",
                         status = status,
                         duration = durationStr,
+                        depth = metadata.depth,
                     )
                 }
         } else {

@@ -182,6 +182,108 @@ abstract class TestSuiteReporterTest {
         )
     )
 
+    val testSuccessWithNestedSteps = TestExecutionSummary(
+        passed = true,
+        suites = listOf(
+            TestExecutionSummary.SuiteResult(
+                passed = true,
+                deviceName = "iPhone 15",
+                flows = listOf(
+                    TestExecutionSummary.FlowResult(
+                        name = "Flow A",
+                        fileName = "flow_a",
+                        filePath = ".maestro/flow_a.yaml",
+                        status = FlowStatus.SUCCESS,
+                        duration = 5000.milliseconds,
+                        startTime = nowPlus1.toInstant().toEpochMilli(),
+                        steps = listOf(
+                            TestExecutionSummary.StepResult(
+                                description = "1. Launch app",
+                                status = "COMPLETED",
+                                duration = "1.2s",
+                                depth = 0,
+                            ),
+                            TestExecutionSummary.StepResult(
+                                description = "2. Run sub-flow",
+                                status = "COMPLETED",
+                                duration = "2.0s",
+                                depth = 0,
+                            ),
+                            TestExecutionSummary.StepResult(
+                                description = "3. Tap on A",
+                                status = "COMPLETED",
+                                duration = "300ms",
+                                depth = 1,
+                            ),
+                            TestExecutionSummary.StepResult(
+                                description = "4. Tap on B",
+                                status = "COMPLETED",
+                                duration = "200ms",
+                                depth = 1,
+                            ),
+                            TestExecutionSummary.StepResult(
+                                description = "5. Assert visible",
+                                status = "COMPLETED",
+                                duration = "100ms",
+                                depth = 0,
+                            ),
+                        )
+                    ),
+                ),
+                duration = 5000.milliseconds,
+                startTime = now.toInstant().toEpochMilli()
+            )
+        )
+    )
+
+    val testErrorWithNestedSteps = TestExecutionSummary(
+        passed = false,
+        suites = listOf(
+            TestExecutionSummary.SuiteResult(
+                passed = false,
+                flows = listOf(
+                    TestExecutionSummary.FlowResult(
+                        name = "Flow B",
+                        fileName = "flow_b",
+                        filePath = ".maestro/flow_b.yaml",
+                        status = FlowStatus.ERROR,
+                        failure = TestExecutionSummary.Failure("Element not found"),
+                        duration = 3000.milliseconds,
+                        startTime = nowPlus1.toInstant().toEpochMilli(),
+                        steps = listOf(
+                            TestExecutionSummary.StepResult(
+                                description = "1. Launch app",
+                                status = "COMPLETED",
+                                duration = "1.0s",
+                                depth = 0,
+                            ),
+                            TestExecutionSummary.StepResult(
+                                description = "2. Run sub-flow",
+                                status = "FAILED",
+                                duration = "2.0s",
+                                depth = 0,
+                            ),
+                            TestExecutionSummary.StepResult(
+                                description = "3. Tap on A",
+                                status = "COMPLETED",
+                                duration = "300ms",
+                                depth = 1,
+                            ),
+                            TestExecutionSummary.StepResult(
+                                description = "4. Tap on missing",
+                                status = "FAILED",
+                                duration = "1.0s",
+                                depth = 1,
+                            ),
+                        )
+                    ),
+                ),
+                duration = 3000.milliseconds,
+                startTime = now.toInstant().toEpochMilli()
+            )
+        )
+    )
+
     val testWithTagsAndProperties = TestExecutionSummary(
         passed = true,
         suites = listOf(

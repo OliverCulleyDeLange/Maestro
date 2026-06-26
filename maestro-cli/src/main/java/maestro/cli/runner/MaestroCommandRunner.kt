@@ -119,6 +119,9 @@ object MaestroCommandRunner {
 
                 refreshUi()
             },
+            onCommandDepth = { command, depth ->
+                debugOutput.commands[command]?.depth = depth
+            },
             onCommandComplete = { _, command ->
                 logger.info("${command.description()} COMPLETED")
                 commandStatuses[command] = CommandStatus.COMPLETED
